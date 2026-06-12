@@ -27,8 +27,6 @@ def _rmse(values: list[float]) -> float:
 
 
 def _settling_time(samples: list[dict], threshold_px: float = 25.0, velocity_limit: float = 20.0) -> float | None:
-    """Return first time after which error and velocity remain bounded."""
-
     for index, sample in enumerate(samples):
         tail = samples[index:]
         if all(item["error"] <= threshold_px and item["velocity"] <= velocity_limit for item in tail):
@@ -40,6 +38,11 @@ def _format_float(value: float | None) -> str:
     if value is None:
         return "n/a"
     return f"{value:.3f}"
+
+
+def _feed_forward(state: SimulationState) -> np.ndarray:
+    gravity_vector = state.field_model.gravity_vector(state.payload.position)
+    return -state.payload.mass * gravity_vector
 
 
 def _run_case(
@@ -92,7 +95,7 @@ def _run_case(
             if state.payload.mass != previous_mass:
                 mass_events.append(
                     {
-                        "time": time_seconds,
+                        "time": round(time_seconds, 3),
                         "from": previous_mass,
                         "to": state.payload.mass,
                         "error_before": state.error_magnitude,
@@ -100,7 +103,12 @@ def _run_case(
                 )
 
         if stabilizer_enabled:
-            state.thrust_force = controller.compute(state.target_position, state.payload.position, dt)
+            state.thrust_force = controller.compute(
+                state.target_position,
+                state.payload.position,
+                dt,
+                feed_forward=_feed_forward(state),
+            )
         else:
             state.thrust_force *= 0.0
 
