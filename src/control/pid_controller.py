@@ -20,13 +20,22 @@ class PIDController:
         self.integral = np.zeros(2, dtype=float)
         self.previous_error = np.zeros(2, dtype=float)
 
-    def compute(self, target: np.ndarray, position: np.ndarray, dt: float) -> np.ndarray:
+    def compute(
+        self,
+        target: np.ndarray,
+        position: np.ndarray,
+        dt: float,
+        feed_forward: np.ndarray | None = None,
+    ) -> np.ndarray:
         error = target - position
         self.integral += error * dt
         derivative = (error - self.previous_error) / dt if dt > 0.0 else np.zeros(2, dtype=float)
         self.previous_error = error
 
         force = self.kp * error + self.ki * self.integral + self.kd * derivative
+        if feed_forward is not None:
+            force = force + feed_forward
+
         magnitude = float(np.linalg.norm(force))
         if magnitude > self.max_force:
             force = force / magnitude * self.max_force
