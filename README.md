@@ -15,6 +15,7 @@ A single payload enters a circular anti-gravity anomaly. Inside the anomaly, gra
 - PID-based stabilizer
 - Live vector visualization for gravity, thrust, and velocity
 - Telemetry panel for position, velocity, acceleration, error, and stability
+- Headless QA benchmark suite for stabilization metrics
 - Architecture and mathematical model documentation
 
 ## Tech Stack
@@ -37,6 +38,8 @@ src/
     engine.py
     field.py
     payload.py
+  qa/
+    run_stabilization_benchmarks.py
   ui/
     pygame_renderer.py
     telemetry_panel.py
@@ -65,6 +68,53 @@ pip install -r requirements.txt
 ```bash
 python -m src.main
 ```
+
+## QA Benchmarks
+
+Run unit tests:
+
+```bash
+pytest
+```
+
+Run the Phase 4 stabilization benchmark suite:
+
+```bash
+python -m src.qa.run_stabilization_benchmarks --details
+```
+
+Use strict mode for CI or final validation:
+
+```bash
+python -m src.qa.run_stabilization_benchmarks --strict --details
+```
+
+The benchmark suite logs:
+
+- `mean_error_px`
+- `max_error_px`
+- `rmse_error_px`
+- `final_error_px`
+- `settling_time_seconds`
+- `stable_time_ratio`
+- `field_inside_ratio`
+- `mean_velocity_px_s`
+- `max_velocity_px_s`
+- `mean_thrust`
+- `max_thrust`
+- `thrust_saturation_ratio`
+- `stability_state_counts`
+- `pass_or_fail`
+
+Covered scenarios:
+
+- baseline PID stabilization
+- uncontrolled baseline
+- fluctuating anti-gravity field strength
+- dynamic payload mass changes
+- max thrust saturation
+- target offset tests
+- timestep variation tests
 
 ## Controls
 
