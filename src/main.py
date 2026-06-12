@@ -48,7 +48,14 @@ def run() -> None:
 
         if not state.paused:
             if state.stabilizer_enabled:
-                state.thrust_force = controller.compute(state.target_position, state.payload.position, dt)
+                gravity_vector = state.field_model.gravity_vector(state.payload.position)
+                gravity_feed_forward = -state.payload.mass * gravity_vector
+                state.thrust_force = controller.compute(
+                    state.target_position,
+                    state.payload.position,
+                    dt,
+                    feed_forward=gravity_feed_forward,
+                )
             else:
                 state.thrust_force *= 0.0
             engine.step(state, dt)
