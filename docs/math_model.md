@@ -82,10 +82,12 @@ Error:
 e = target_position - payload_position
 ```
 
-Controller force:
+The stabilizer combines model-aware gravity feed-forward with PID correction. The feed-forward term cancels the currently estimated gravitational force, while PID removes residual position and velocity error:
 
 ```text
-F_thrust = Kp * e + Ki * integral(e) + Kd * derivative(e)
+F_feedforward = -m * g_eff
+F_pid = Kp * e + Ki * integral(e) + Kd * derivative(e)
+F_thrust = F_feedforward + F_pid
 ```
 
 Clamp:
@@ -93,6 +95,8 @@ Clamp:
 ```text
 ||F_thrust|| <= max_thrust
 ```
+
+This avoids the steady-state hover offset produced by a pure proportional controller in a persistent inverted-gravity field.
 
 ## Stability Criteria
 
